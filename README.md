@@ -7,7 +7,7 @@ It demonstrates **Geospatial Data Engineering** skills by ingesting live traffic
 
 **Key Features:**
 * **ELT Architecture:** Extract, Load, and Transform pattern.
-* **Geospatial Analysis:** Uses PostGIS to handle coordinate systems and spatial joins (`ST_Contains`).
+* **Geospatial Analysis:** Uses PostGIS to handle coordinate systems(`ST_GeomFromGeoJSON`,`ST_SetSRID`,`ST_MakePoint`,`ST_Multi`) and spatial joins (`ST_Contains`).
 * **Infrastructure as Code:** Fully containerized using Docker.
 * **Orchestration:** Automated scheduling using Dagster.
 
@@ -36,7 +36,7 @@ It demonstrates **Geospatial Data Engineering** skills by ingesting live traffic
 1.  **Clone the repository:**
     ```bash
     git clone https://github.com/pranavkapale/Smart-City-Traffic-Optimizer
-    cd nyc_traffic_pipeline
+    cd Smart-City-Traffic-Optimizer
     ```
 
 2.  **Start the infrastructure:**
@@ -69,8 +69,8 @@ SELECT * FROM traffic_by_borough ORDER BY active_sensors DESC;
 
 ### Reason of keeping Empty *__init__.py* 
 * Although technically we can delete *__init__.py* in modern Python Projects(Python 3.3+) and the project will still work as a "Namespace Package."
-* However in our case Dagster and Python look for __init__.py to confirm that the folder is a legitimate module they can import from.
-* Also Sometimes Docker mounts volumes can cause Python to fail to find sub-modules if the __init__.py is missing. Keeping it acts as a "marker" that says "This folder is a Python package."
+* However, in our case Dagster and Python look for __init__.py to confirm that the folder is a legitimate module they can import from.
+* Also, Sometimes Docker mounts volumes can cause Python to fail to find sub-modules if the __init__.py is missing. Keeping it acts as a "marker" that says "This folder is a Python package."
 
 ### Additional Helpful Docker Commands 
 
@@ -79,7 +79,7 @@ SELECT * FROM traffic_by_borough ORDER BY active_sensors DESC;
     docker-compose down
     ```
     
-2.  **✔️ List down Volumes:** Docker "remembers" the volume even if you stop the container. SO if you change Passwords in between this will help you to identify and delete older volumes.
+2.  **✔️ List down Volumes:** Docker "remembers" the older volumes even if you stop the container. So if you change Configurations from .env file in between builds this will help you to identify and delete older volumes.
     ```bash
     docker volume ls
     ```
@@ -106,6 +106,6 @@ SELECT * FROM traffic_by_borough ORDER BY active_sensors DESC;
     
 7.  **🧾 Extra Cleanup (if needed):** Remove everything Docker has created (be careful — this wipes all containers, images, volumes, and networks on your system)
     ```bash
-    docker-compose down
+    docker system prune -a --volumes
     ```
     💡 Tip: Use docker-compose down for normal cleanup, and only add --rmi all -v or docker system prune when you want a completely fresh slate.
