@@ -1,0 +1,12 @@
+nyc_traffic:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: postgres_db      # The service name from docker-compose
+      user: admin            # From .env
+      password: adminpassword # From .env
+      port: 5432
+      dbname: traffic_db
+      schema: public
+      threads: 1

@@ -1,0 +1,64 @@
+version: '3.0'
+
+services:
+  # 1. The Database (Postgres + PostGIS)
+  postgres_db:
+    image: postgis/postgis:15-3.3
+    container_name: traffic_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - traffic_net
+
+  # 2. The Data Lake (MinIO)
+  minio:
+    image: minio/minio
+    container_name: traffic_minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      - traffic_net
+
+  # 3. The Orchestrator (Dagster)
+  dagster:
+    image: python:3.9-slim
+    container_name: traffic_dagster
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
+      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER}
+      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD}
+      - DBT_PROFILES_DIR=/opt/dagster/dbt  # Pointing to where we mount dbt files
+    working_dir: /opt/dagster/app
+    volumes:
+      - ./dagster_pipeline:/opt/dagster/app
+      - ./dbt_project:/opt/dagster/dbt
+    ports:
+      - "3000:3000"
+    command: >
+      sh -c "pip install -r requirements.txt && dagster dev -f repository.py -h 0.0.0.0 -p 3000"
+    depends_on:
+      - postgres_db
+      - minio
+    networks:
+      - traffic_net
+
+volumes:
+  postgres_data:
+
+networks:
+  traffic_net:
